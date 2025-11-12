@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MinecraftServerDiscordBot": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

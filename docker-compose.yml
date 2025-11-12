@@ -1,0 +1,38 @@
+services:
+  minecraft_discord_bot:
+    build:
+      context: .
+      dockerfile: MinecraftServerDiscordBot/Dockerfile
+    container_name: minecraft_discord_bot
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - Discord__BotToken=${DISCORD_BOT_TOKEN:-}
+      - Discord__AllowedChannelIds__0=${ALLOWED_CHANNEL_ID:-}
+      - Discord__CommandPrefix=${COMMAND_PREFIX:-}
+      - Discord__CommandCategories__EnableWhitelist=${ENABLE_WHITELIST_COMMANDS:-true}
+      - Discord__CommandCategories__EnablePlayer=${ENABLE_PLAYER_COMMANDS:-true}
+      - Discord__CommandCategories__EnableServer=${ENABLE_SERVER_COMMANDS:-true}
+      - Discord__RolePermissions__EnableRoleChecks=${ENABLE_RBAC:-false}
+      - Discord__RolePermissions__AdministratorBypass=${RBAC_ADMIN_BYPASS:-true}
+      - Discord__RolePermissions__WhitelistRoles__0=${WHITELIST_ROLES:-}
+      - Discord__RolePermissions__PlayerRoles__0=${PLAYER_ROLES:-}
+      - Discord__RolePermissions__ServerRoles__0=${SERVER_ROLES:-}
+      - Rcon__Host=${RCON_HOST:-minecraft}
+      - Rcon__Port=${RCON_PORT:-25575}
+      - Rcon__Password=${RCON_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - minecraft_network
+
+networks:
+  minecraft_network:
+    driver: bridge
