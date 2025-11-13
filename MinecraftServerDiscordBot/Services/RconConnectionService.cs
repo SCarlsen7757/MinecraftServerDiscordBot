@@ -158,7 +158,11 @@ public class RconConnectionService : IRconClient
         // Check if we need to create a new client
         if (rconClient == null)
         {
-            logger.LogInformation("Creating new RCON client for {Host}:{Port}", host, port);
+            if(logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Creating new RCON client for {Host}:{Port}", host, port);
+            }
+
             rconClient = new RconClientBuilder()
                 .WithHost(host)
                 .WithPort(port)
@@ -175,8 +179,11 @@ public class RconConnectionService : IRconClient
         }
 
         // Attempt to connect
-        logger.LogInformation("Connecting to RCON server at {Host}:{Port}...", host, port);
-        
+        if(logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Connecting to RCON server at {Host}:{Port}...", host, port);
+        }
+
         try
         {
             await rconClient.ConnectAsync(cancellationToken);
@@ -187,8 +194,11 @@ public class RconConnectionService : IRconClient
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to connect to RCON server at {Host}:{Port}. The Minecraft server may not be running yet.", host, port);
-            
+            if(logger.IsEnabled(LogLevel.Error))
+            {
+                logger.LogError(ex, "Failed to connect to RCON server at {Host}:{Port}. The Minecraft server may not be running yet.", host, port);
+            }
+
             // Dispose the failed client so we create a fresh one next time
             rconClient?.Dispose();
             rconClient = null;
@@ -226,9 +236,12 @@ public class RconConnectionService : IRconClient
             
             if (idleTime >= idleTimeout && rconClient?.IsConnected == true)
             {
-                logger.LogInformation("RCON connection idle for {IdleSeconds} seconds, disconnecting...", 
+                if(logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation("RCON connection idle for {IdleSeconds} seconds, disconnecting...", 
                     idleTimeout.TotalSeconds);
-                
+                }
+
                 try
                 {
                     rconClient.Dispose();
@@ -261,5 +274,7 @@ public class RconConnectionService : IRconClient
         rconClient = null;
         
         connectionLock.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

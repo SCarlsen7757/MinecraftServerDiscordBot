@@ -31,17 +31,24 @@ public class PermissionService
             return true;
         }
 
-        var user = command.User as SocketGuildUser;
-        if (user == null)
+        if (command.User is not SocketGuildUser user)
         {
-            logger.LogWarning("User {Username} is not a guild member, denying permission", command.User.Username);
+            if(logger.IsEnabled(LogLevel.Warning))
+            {
+                logger.LogWarning("User {Username} is not a guild member, denying permission", command.User.Username);
+            }
+
             return false;
         }
 
         // Check administrator bypass
         if (options.RolePermissions.AdministratorBypass && user.GuildPermissions.Administrator)
         {
-            logger.LogDebug("User {Username} has Administrator permission, bypassing role checks", user.Username);
+            if(logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("User {Username} has Administrator permission, bypassing role checks", user.Username);
+            }
+
             return true;
         }
 
@@ -50,14 +57,21 @@ public class PermissionService
         // If no roles configured, deny access (when RBAC is enabled)
         if (allowedRoles.Count == 0)
         {
-            logger.LogDebug("No roles configured for category {Category}, denying access", category);
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("No roles configured for category {Category}, denying access", category);
+            }
             return false;
         }
 
         // Check for @everyone
         if (allowedRoles.Any(r => r.Equals("@everyone", StringComparison.OrdinalIgnoreCase)))
         {
-            logger.LogDebug("@everyone role configured for category {Category}, allowing access", category);
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("@everyone role configured for category {Category}, allowing access", category);
+            }
+
             return true;
         }
 
@@ -72,8 +86,12 @@ public class PermissionService
             {
                 if (userRoles.Any(r => r.Id == roleId))
                 {
-                    logger.LogDebug("User {Username} has role ID {RoleId} for category {Category}", 
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.LogDebug("User {Username} has role ID {RoleId} for category {Category}", 
                         user.Username, roleId, category);
+                    }
+
                     return true;
                 }
             }
@@ -82,15 +100,22 @@ public class PermissionService
             {
                 if (userRoles.Any(r => r.Name.Equals(allowedRole, StringComparison.OrdinalIgnoreCase)))
                 {
-                    logger.LogDebug("User {Username} has role '{RoleName}' for category {Category}", 
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.LogDebug("User {Username} has role '{RoleName}' for category {Category}", 
                         user.Username, allowedRole, category);
+                    }
+
                     return true;
                 }
             }
         }
-
-        logger.LogInformation("User {Username} does not have required roles for category {Category}. User roles: {UserRoles}", 
+        if(logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("User {Username} does not have required roles for category {Category}. User roles: {UserRoles}", 
             user.Username, category, string.Join(", ", userRoles.Select(r => r.Name)));
+        }
+
         return false;
     }
 
@@ -104,7 +129,7 @@ public class PermissionService
             CommandCategory.Whitelist => options.RolePermissions.WhitelistRoles,
             CommandCategory.Player => options.RolePermissions.PlayerRoles,
             CommandCategory.Server => options.RolePermissions.ServerRoles,
-            _ => new List<string>()
+            _ => []
         };
     }
 
