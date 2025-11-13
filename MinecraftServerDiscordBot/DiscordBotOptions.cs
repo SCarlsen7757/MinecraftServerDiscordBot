@@ -4,7 +4,7 @@ public class DiscordBotOptions
 {
     public string BotToken { get; set; } = string.Empty;
 
-    public HashSet<ulong> AllowedChannelIds { get; set; } = new();
+    public HashSet<ulong> AllowedChannelIds { get; set; } = [];
 
     /// <summary>
     /// Prefix to add to all command names. Leave empty for no prefix.
