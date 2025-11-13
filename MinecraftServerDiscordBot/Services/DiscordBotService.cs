@@ -15,7 +15,6 @@ public class DiscordBotService : IHostedService
     private readonly ILogger<DiscordBotService> logger;
     private readonly DiscordBotOptions options;
     private readonly IServiceProvider serviceProvider;
-    private readonly IRconClient rconClient;
     private readonly PermissionService permissionService;
     private DiscordSocketClient? client;
     private bool isConnected;
@@ -26,13 +25,11 @@ public class DiscordBotService : IHostedService
         ILogger<DiscordBotService> logger,
         IOptions<DiscordBotOptions> options,
         IServiceProvider serviceProvider,
-        IRconClient rconClient,
         PermissionService permissionService)
     {
         this.logger = logger;
         this.options = options.Value;
         this.serviceProvider = serviceProvider;
-        this.rconClient = rconClient;
         this.permissionService = permissionService;
     }
 
