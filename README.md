@@ -1,6 +1,6 @@
 # Minecraft Discord Bot
 
-A Discord bot for managing a Minecraft server via RCON commands. Built with ASP.NET Core 9.0 and Discord.Net.
+A Discord bot for managing a Minecraft server via RCON commands. Built with ASP.NET Core 10.0 and Discord.Net.
 
 ## Features
 
