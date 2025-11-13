@@ -284,6 +284,28 @@ public class DiscordBotService : IHostedService
                 return;
             }
 
+            // Ensure the invoked command uses the configured prefix when a prefix is set.
+            if (!string.IsNullOrWhiteSpace(options.CommandPrefix))
+            {
+                var requiredPrefix = $"{options.CommandPrefix}-";
+                if (!command.CommandName.StartsWith(requiredPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Suggest the correctly-prefixed command name
+                    var suggested = $"{options.CommandPrefix}-{GetBaseCommandName(command.CommandName)}";
+                    await command.RespondAsync(
+                        $"This command requires the format '/{requiredPrefix}{command.CommandName}'. Try '/{suggested}'.",
+                        ephemeral: true);
+
+                    if (logger.IsEnabled(LogLevel.Warning))
+                    {
+                        logger.LogWarning("User {Username} attempted command without required prefix: '{CommandName}' (required prefix: '{Prefix}')",
+                            command.User.Username, command.CommandName, options.CommandPrefix);
+                    }
+
+                    return;
+                }
+            }
+
             // Get base command name (strip prefix if present)
             var baseCommandName = GetBaseCommandName(command.CommandName);
 
