@@ -141,7 +141,7 @@ public class DiscordBotService : IHostedService
             LogSeverity.Debug => LogLevel.Trace,
             _ => LogLevel.Information
         };
-        if(logger.IsEnabled(logLevel))
+        if (logger.IsEnabled(logLevel))
         {
             logger.Log(logLevel, log.Exception, "[Discord.Net] {Message}", log.Message);
         }
@@ -236,6 +236,47 @@ public class DiscordBotService : IHostedService
             }
         }
 
+        // If there are no commands enabled, remove any previously-registered commands for this bot in the guild
+        var desiredNames = new HashSet<string>(
+            commands.Where(c => c.Name.IsSpecified)
+                    .Select(c => c.Name.Value),
+            StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var existingCommands = await guild.GetApplicationCommandsAsync();
+
+            // Remove commands that are not desired (this handles prefix changes and disabled categories)
+            foreach (var existing in existingCommands)
+            {
+                if (!desiredNames.Contains(existing.Name))
+                {
+                    try
+                    {
+                        await existing.DeleteAsync();
+                        if (logger.IsEnabled(LogLevel.Information))
+                        {
+                            logger.LogInformation("Removed stale command '{CommandName}' from guild {GuildId}", existing.Name, guild.Id);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (logger.IsEnabled(LogLevel.Error))
+                        {
+                            logger.LogError(ex, "Failed to remove stale command '{CommandName}' from guild {GuildId}", existing.Name, guild.Id);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            if (logger.IsEnabled(LogLevel.Warning))
+            {
+                logger.LogWarning(ex, "Could not list or clean existing commands for guild {GuildId}", guild.Id);
+            }
+        }
+
         if (commands.Count == 0)
         {
             logger.LogWarning("No command categories are enabled. Bot will have no commands.");
@@ -326,7 +367,7 @@ public class DiscordBotService : IHostedService
                 await command.RespondAsync(
                     "This command is currently disabled.",
                     ephemeral: true);
-                if(logger.IsEnabled(LogLevel.Warning))
+                if (logger.IsEnabled(LogLevel.Warning))
                 {
                     logger.LogWarning("Attempted to execute disabled command '{CommandName}' by user {Username}",
                     command.CommandName, command.User.Username);
@@ -340,7 +381,7 @@ public class DiscordBotService : IHostedService
             {
                 var deniedMessage = permissionService.GetPermissionDeniedMessage(category.Value);
                 await command.RespondAsync(deniedMessage, ephemeral: true);
-                if(logger.IsEnabled(LogLevel.Warning))
+                if (logger.IsEnabled(LogLevel.Warning))
                 {
                     logger.LogWarning("User {Username} denied access to command '{CommandName}' - insufficient permissions",
                     command.User.Username, command.CommandName);
@@ -348,7 +389,7 @@ public class DiscordBotService : IHostedService
 
                 return;
             }
-            if(logger.IsEnabled(LogLevel.Information))
+            if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation("Executing command '{CommandName}' from user {Username} in guild {GuildId}",
                 command.CommandName, command.User.Username, command.GuildId);
@@ -366,14 +407,14 @@ public class DiscordBotService : IHostedService
         }
         catch (TimeoutException)
         {
-            if(logger.IsEnabled(LogLevel.Warning))
+            if (logger.IsEnabled(LogLevel.Warning))
             {
                 logger.LogWarning("Timeout executing command '{CommandName}'", command.CommandName);
             }
         }
         catch (Exception ex)
         {
-            if(logger.IsEnabled(LogLevel.Error))
+            if (logger.IsEnabled(LogLevel.Error))
             {
                 logger.LogError(ex, "Error executing command '{CommandName}'", command.CommandName);
             }
@@ -409,7 +450,7 @@ public class DiscordBotService : IHostedService
         var result = await whitelistCommands.AddPlayerAsync(player);
 
         await command.RespondAsync($"✅ Whitelist Add: {result.Status} - {result.Message}");
-        if(logger.IsEnabled(LogLevel.Information))
+        if (logger.IsEnabled(LogLevel.Information))
         {
             logger.LogInformation("Whitelisted player '{Player}': {Status}", player, result.Status);
         }
@@ -428,7 +469,7 @@ public class DiscordBotService : IHostedService
         var result = await whitelistCommands.RemovePlayerAsync(player);
 
         await command.RespondAsync($"🗑️ Whitelist Remove: {result.Status} - {result.Message}");
-        if(logger.IsEnabled(LogLevel.Information))
+        if (logger.IsEnabled(LogLevel.Information))
         {
             logger.LogInformation("Removed player '{Player}' from whitelist: {Status}", player, result.Status);
         }
